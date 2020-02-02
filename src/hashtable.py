@@ -6,6 +6,21 @@ class LinkedPair:
         self.key = key
         self.value = value
         self.next = None
+        self.prev = None
+
+    def __str__(self):
+      next = 'empty'
+
+      if self.next is not None:
+        next = self.next.key
+
+      return f"Current: {self.key} : {self.value}\nNext: {next}\n"
+
+    def print_list(self, index):
+      current = self
+
+      while current is not None:
+        current = current.next
 
 class HashTable:
     '''
@@ -23,6 +38,15 @@ class HashTable:
 
         You may replace the Python hash with DJB2 as a stretch goal.
         '''
+        def hash(key):
+            index = 0
+            salt = 1701
+
+            for char in key:
+                 index += (salt << 13) + salt + ord( char )
+
+            return index
+
         return hash(key)
 
 
@@ -51,8 +75,29 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        
+        node = LinkedPair(key, value)
+        index = self._hash_mod(key)
 
+        list_start = self.storage[index]
+  
+        if not list_start: 
+          self.storage[index] = node
+
+        else:
+          current_node = list_start
+
+          while current_node is not None:
+            if current_node.key == key:
+              current_node.value = value
+              return
+            
+            if current_node.next is None:
+              current_node.next = node
+              node.prev = current_node
+              return
+
+            current_node = current_node.next
 
 
     def remove(self, key):
@@ -63,7 +108,35 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
+        node = self.storage[index]
+
+        if node == None: 
+          print( "Error_Code::404::Key Not Found" )
+          return
+
+        while node is not None:
+          if node.key == key:
+            temp = node.prev
+
+            if node.prev is None and node.next is None:
+              self.storage[index] = None
+              return
+
+            if node.prev is None and node.next is not None:
+              node.next.prev = None
+            elif node.prev is not None and node.next is None:
+              node.prev.next = None
+            else:
+              node.prev.next = node.next
+              node.next.prev = temp.prev
+            return
+
+          node = node.next
+
+        print( "Error_Code::404::Key Not Found" )
+        return  
+        
 
 
     def retrieve(self, key):
@@ -74,7 +147,16 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
+        node = self.storage[index]
+
+        if node == None: return None
+        
+        while node is not None:
+          if key == node.key:
+            return node.value
+
+          node = node.next
 
 
     def resize(self):
@@ -84,7 +166,18 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        old_storage = self.storage
+        
+        self.capacity *= 2
+        self.storage = [None] * self.capacity
+
+        for i in range( len( old_storage ) ):
+          current_list_node = old_storage[i]
+
+          while current_list_node is not None:
+            self.insert(current_list_node.key, current_list_node.value)
+
+            current_list_node = current_list_node.next
 
 
 
